@@ -1,8 +1,10 @@
+#import "@preview/ctheorems:1.1.0": *
+#import "@preview/physica:0.9.2": *
 #let report(title: "", class: "", date: "", author: "", affiliation: "", body) = {
   set text(
     font: (
       "Times New Roman",
-      "Source Han Serif VF"
+      "Yonaga Old Mincho"
     ),
     size: 12pt
   )
@@ -22,10 +24,86 @@
   set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
   show par: set block(spacing: 1.4em)
 
-  show link: underline
-  show link: set text(fill: rgb("#125ee0"))
-
   set heading(numbering: "1.1.")
+
+  show heading.where(level: 1): it => {
+    counter(math.equation).update(0)
+    block(above: 1.5em, below: 1em)
+    text(weight: "bold", size: 22pt)[
+      #numbering(it.numbering, ..counter(heading).at(it.location()))
+    ]
+    text(weight: "bold", size: 20pt)[#it.body \ ]
+  }
+
+  show heading.where(level: 2): it => {
+    block(above: 0.2em, below: 1em)
+    text(weight: "bold", size: 15pt)[
+      #numbering(it.numbering, ..counter(heading).at(it.location()))
+    ]
+    text(weight: 700, size: 14pt)[#it.body \ ]
+  }
+
+  set math.equation(numbering: "(1)", supplement: "式")
+
+  show: thmrules
+
+  // citation number
+  show ref: it => {
+    if it.element != none and it.element.func() == figure {
+      let el = it.element
+      let loc = el.location()
+      let chapt = counter(heading).at(loc).at(0)
+
+      link(loc)[#if el.kind == "image" or el.kind == "table" {
+          // counting 
+          let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+          it.element.supplement
+          " "
+          str(chapt)
+          "."
+          str(num)
+        } else if el.kind == "thmenv" {
+          let thms = query(selector(<meta:thmenvcounter>).after(loc), loc)
+          let number = thmcounters.at(thms.first().location()).at("latest")
+          it.element.supplement
+          " "
+          numbering(it.element.numbering, ..number)
+        } else {
+          it
+        }
+      ]
+    } else if it.element != none and it.element.func() == math.equation {
+      let el = it.element
+      let loc = el.location()
+      let chapt = counter(heading).at(loc).at(0)
+      let num = counter(math.equation).at(loc).at(0)
+
+      it.element.supplement
+      " ("
+      str(chapt)
+      "."
+      str(num)
+      ")"
+    } else if it.element != none and it.element.func() == heading {
+      let el = it.element
+      let loc = el.location()
+      let num = numbering(el.numbering, ..counter(heading).at(loc))
+      if el.level == 1 {
+        "第"
+        str(num).replace(".", "")
+        "章"
+      } else if el.level == 2 {
+        str(num)
+        "節"
+      } else if el.level == 3 {
+        str(num)
+        "項"
+      }
+    } else {
+      it
+    }
+  }
+
 
   set page(numbering: "1 / 1")
 
@@ -57,3 +135,27 @@
 
   body
 }
+
+#let notag(block: true, body) = {
+  math.equation(block: block, numbering: none)[#body]
+}
+
+#let theorem = thmbox("theorem", "定理", fill: rgb("#eeeeee"))
+#let corollary = thmplain(
+  "corollary",
+  "系",
+  base: "theorem",
+  titlefmt: strong
+)
+#let definition = thmbox("definition", "定義", fill: rgb("#d0f4f5"))
+#let lemma = thmplain("lemma", "補題", base: "theorem", titlefmt: strong)
+
+#let example = thmplain("example", "例").with(numbering: none)
+#let proof = thmplain(
+  "proof",
+  "証明",
+  base: "theorem",
+  bodyfmt: body => [#body #h(1fr) $square$]
+).with(numbering: none)
+
+#let remark = thmplain("remark", "Remark").with(numbering: none)
