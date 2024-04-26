@@ -1,6 +1,6 @@
 #import "@preview/ctheorems:1.1.0": *
 #import "@preview/physica:0.9.2": *
-#let report(title: "", class: "", date: "", author: "", affiliation: "", body) = {
+#let report(title: "", class: "", date: "", author: "", affiliation: "", bibliography-file: "", body) = {
   set text(
     font: (
       "Times New Roman",
@@ -43,7 +43,8 @@
     text(weight: 700, size: 14pt)[#it.body \ ]
   }
 
-  set math.equation(numbering: "(1)", supplement: "式")
+  set math.equation(numbering: num =>
+  "(" + ((counter(heading).get().at(0),) + (num,)).map(str).join(".") + ")", supplement: "式")
 
   show: thmrules
 
@@ -134,6 +135,13 @@
   ))
 
   body
+
+  // Display bibliography.
+  if bibliography-file != "" {
+    show bibliography: set text(12pt)
+    show bibliography: set heading(numbering: "1.")
+    bibliography(bibliography-file, title: "参考文献", style: "ieee")
+  }
 }
 
 #let notag(block: true, body) = {
