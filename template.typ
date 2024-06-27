@@ -24,16 +24,13 @@
   set par(leading: 0.8em, first-line-indent: 20pt, justify: true)
   show par: set block(spacing: 1.4em)
 
-  if no-header {
-    set heading(numbering: none)
-  } else {
-    set heading(numbering: "1.1.")
-  }
+  set heading(numbering: none) if no-header == true
+  set heading(numbering: "1.1.") if no-header == false
 
   show heading.where(level: 1): it => {
-    counter(math.equation).update(0)
     block(above: 1.5em, below: 1em)
     if no-header == false {
+      counter(math.equation).update(0)
       text(weight: "bold", size: 22pt)[
         #numbering(it.numbering, ..counter(heading).at(it.location()))
       ]
@@ -53,9 +50,11 @@
 
   show figure.where(kind: table): set figure.caption(position: top)
 
-
   set math.equation(numbering: num =>
-  "(" + ((counter(heading).get().at(0),) + (num,)).map(str).join(".") + ")", supplement: "式")
+    "(" + str(num) + ")", supplement: "式") if no-header == true
+  set math.equation(numbering: num =>
+    "(" + ((counter(heading).get().at(0),) + (num,)).map(str).join(".") + ")", supplement: "式") if no-header == false
+  
 
   show: thmrules
 
@@ -118,6 +117,8 @@
 
 
   set page(numbering: "1 / 1")
+
+  set figure(supplement: "図")
 
   // date
   align(right, text(12pt)[
